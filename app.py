@@ -127,36 +127,19 @@ def profile():
     if not session.get("user_id"):
         return redirect(url_for("login"))
 
-    # Hard‑coded user info
-    user = {
-        "initials": "JD",
-        "name": "Jane Doe",
-        "email": "jane@example.com",
-        "member_since": "2023-01-15",
-    }
+        # Parse optional date filters from query parameters
+    date_from = request.args.get('date_from') or None
+    date_to = request.args.get('date_to') or None
 
-    # Hard‑coded summary stats
-    stats = {
-        "total": "$1,250.00",
-        "count": 42,
-        "top_category": "Food",
-    }
+    # Retrieve authenticated user's details
+    user = get_user_by_id(session["user_id"])
 
-    # Hard‑coded recent expenses
-    expenses = [
-        {"date": "2026-05-01", "description": "Coffee", "category": "Food", "amount": "$4.50"},
-        {"date": "2026-04-28", "description": "Metro ticket", "category": "Transport", "amount": "$2.75"},
-        {"date": "2026-04-25", "description": "Internet Bill", "category": "Bills", "amount": "$55.00"},
-    ]
+    # Fetch dynamic data based on optional date filters
+    stats = get_summary_stats(session["user_id"], date_from, date_to)
+    expenses = get_recent_transactions(session["user_id"], limit=10, date_from=date_from, date_to=date_to)
+    categories = get_category_breakdown(session["user_id"], date_from, date_to)
 
-    # Hard‑coded category breakdown (percentages for progress bars)
-    categories = [
-        {"name": "Food", "amount": "$300", "percent": 30},
-        {"name": "Transport", "amount": "$120", "percent": 12},
-        {"name": "Bills", "amount": "$500", "percent": 50},
-    ]
-
-    # Preserve filter presets (same as before) – they are unused in hard‑coded view but kept for consistency
+    # Preserve filter presets for UI
     today = date.today()
     today_str = today.isoformat()
     this_month_from = today.replace(day=1).isoformat()
@@ -173,8 +156,8 @@ def profile():
         stats=stats,
         expenses=expenses,
         categories=categories,
-        date_from=None,
-        date_to=None,
+        date_from=date_from,
+        date_to=date_to,
         presets=presets,
     )
 
