@@ -123,39 +123,58 @@ def logout():
 
 @app.route("/profile")
 def profile():
+    # Guard: redirect unauthenticated users
     if not session.get("user_id"):
         return redirect(url_for("login"))
 
-    uid = session["user_id"]
+    # Hard‑coded user info
+    user = {
+        "initials": "JD",
+        "name": "Jane Doe",
+        "email": "jane@example.com",
+        "member_since": "2023-01-15",
+    }
+
+    # Hard‑coded summary stats
+    stats = {
+        "total": "$1,250.00",
+        "count": 42,
+        "top_category": "Food",
+    }
+
+    # Hard‑coded recent expenses
+    expenses = [
+        {"date": "2026-05-01", "description": "Coffee", "category": "Food", "amount": "$4.50"},
+        {"date": "2026-04-28", "description": "Metro ticket", "category": "Transport", "amount": "$2.75"},
+        {"date": "2026-04-25", "description": "Internet Bill", "category": "Bills", "amount": "$55.00"},
+    ]
+
+    # Hard‑coded category breakdown (percentages for progress bars)
+    categories = [
+        {"name": "Food", "amount": "$300", "percent": 30},
+        {"name": "Transport", "amount": "$120", "percent": 12},
+        {"name": "Bills", "amount": "$500", "percent": 50},
+    ]
+
+    # Preserve filter presets (same as before) – they are unused in hard‑coded view but kept for consistency
     today = date.today()
-
-    date_from = _parse_date(request.args.get("date_from"))
-    date_to = _parse_date(request.args.get("date_to"))
-
-    if date_from and date_to and date_from > date_to:
-        flash("Start date must be before end date.", "error")
-        date_from = date_to = None
-
     today_str = today.isoformat()
     this_month_from = today.replace(day=1).isoformat()
-    this_month_to = today.replace(
-        day=calendar.monthrange(today.year, today.month)[1]
-    ).isoformat()
-
+    this_month_to = today.replace(day=calendar.monthrange(today.year, today.month)[1]).isoformat()
     presets = {
         "this_month": {"date_from": this_month_from, "date_to": this_month_to},
-        "last_3":     {"date_from": _months_ago(today, 3), "date_to": today_str},
-        "last_6":     {"date_from": _months_ago(today, 6), "date_to": today_str},
+        "last_3": {"date_from": _months_ago(today, 3), "date_to": today_str},
+        "last_6": {"date_from": _months_ago(today, 6), "date_to": today_str},
     }
 
     return render_template(
         "profile.html",
-        user=get_user_by_id(uid),
-        stats=get_summary_stats(uid, date_from, date_to),
-        expenses=get_recent_transactions(uid, date_from=date_from, date_to=date_to),
-        categories=get_category_breakdown(uid, date_from, date_to),
-        date_from=date_from,
-        date_to=date_to,
+        user=user,
+        stats=stats,
+        expenses=expenses,
+        categories=categories,
+        date_from=None,
+        date_to=None,
         presets=presets,
     )
 
